@@ -139,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
                 request.setHeader("Content-Type", "application/octet-stream");
                 request.setHeader("Ocp-Apim-Subscription-Key", "d2445b75d6d54c07970a7f834c92ff3c");
 
-                // Request body
+                // Request body.The parameter of setEntity converts the image to base64
                 request.setEntity(new ByteArrayEntity(toBase64(img)));
 
                 // getting a response and assigning it to the string res
