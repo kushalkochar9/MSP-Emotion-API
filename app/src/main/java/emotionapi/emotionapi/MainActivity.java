@@ -31,13 +31,16 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
+import static android.Manifest.permission.CAMERA;
 
 public class MainActivity extends AppCompatActivity {
 
     private ImageView imageView; // variable to hold the image view in our activity_main.xml
     private TextView resultText; // variable to hold the text view in our activity_main.xml
     private static final int RESULT_LOAD_IMAGE  = 100;
+    private static final int REQUEST_CAMERA_CODE = 300;
     private static final int REQUEST_PERMISSION_CODE = 200;
+
 
 
     @Override
@@ -86,6 +89,11 @@ public class MainActivity extends AppCompatActivity {
             Bitmap bitmap = BitmapFactory.decodeFile(picturePath);
             imageView.setImageBitmap(bitmap);
         }
+
+        if (requestCode == REQUEST_CAMERA_CODE && resultCode == RESULT_OK) {
+            Bitmap photo = (Bitmap) data.getExtras().get("data");
+            imageView.setImageBitmap(photo);
+        }
     }
 
     // convert image to base 64 so that we can send the image to Emotion API
@@ -99,13 +107,21 @@ public class MainActivity extends AppCompatActivity {
 
     // if permission is not given we get permission
     private void requestPermission() {
-        ActivityCompat.requestPermissions(MainActivity.this,new String[]{READ_EXTERNAL_STORAGE}, REQUEST_PERMISSION_CODE);
+        ActivityCompat.requestPermissions(MainActivity.this,new String[]{READ_EXTERNAL_STORAGE,CAMERA}, REQUEST_PERMISSION_CODE);
     }
 
 
     public boolean checkPermission() {
         int result = ContextCompat.checkSelfPermission(getApplicationContext(),READ_EXTERNAL_STORAGE);
-        return result == PackageManager.PERMISSION_GRANTED;
+        int result2 = ContextCompat.checkSelfPermission(getApplicationContext(),CAMERA);
+        return result == PackageManager.PERMISSION_GRANTED && result2 == PackageManager.PERMISSION_GRANTED;
+    }
+
+    public void getCameraImage(View view) {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(takePictureIntent, REQUEST_CAMERA_CODE);
+        }
     }
 
     // asynchronous class which makes the api call in the background
@@ -137,7 +153,8 @@ public class MainActivity extends AppCompatActivity {
                 URI uri = builder.build();
                 HttpPost request = new HttpPost(uri);
                 request.setHeader("Content-Type", "application/octet-stream");
-                request.setHeader("Ocp-Apim-Subscription-Key", "d2445b75d6d54c07970a7f834c92ff3c");
+                // enter you subscription key here
+                request.setHeader("Ocp-Apim-Subscription-Key", "3ad07376401b4442b48e0ddebdd68adf");
 
                 // Request body.The parameter of setEntity converts the image to base64
                 request.setEntity(new ByteArrayEntity(toBase64(img)));
